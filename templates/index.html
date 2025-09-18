@@ -24,10 +24,14 @@
             required
             type="text"
         >
-        <select name="sport" required>
-            <option disabled selected value="">Sport</option>
             {% for sport in sports %}
-                <option value="{{ sport }}">{{ sport }}</option>
+                <input 
+                    name="sport" 
+                    type="radio"
+                    value="{{ sport }}"
+                    >
+                    {{ sport }}
+                </input>
             {% endfor %}
         </select>
         <button type="submit">Register</button>

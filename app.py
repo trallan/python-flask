@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request
+import sqlite3
+from flask import Flask, render_template, request, g
 
 app = Flask(__name__)
 
@@ -7,6 +8,13 @@ SPORTS = [
     "Soccer",
     "Ultimate Frisbee",
 ]
+
+def get_db():
+    if "db" not in g:
+        g.db = sqlite3.connect("test.db")
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -17,6 +25,25 @@ def index():
     
 @app.route("/register", methods=["POST"])
 def register():
-    if not request.form.get("name") or request.form.get("sport") not in SPORTS:
-        return render_template("failure.html")
-    return render_template("success.html", name=request.form.get("name"), option=request.form.get("sport"))
+    name = request.form.get("name")
+    if not name:
+        return render_template("error.html", message="Missing name")
+
+    sport = request.form.get("sport")
+    if not sport:
+        return render_template("error.html", message="Missing sport")
+    if sport not in SPORTS:
+        return render_template("error.html", message="Invalid sport")
+   
+    db = get_db()
+    db.execute("INSERT INTO registrants (name, sport) VALUES(?, ?)", (name, sport))
+    db.commit()
+
+    return render_template("success.html", name=name, sport=sport)
+
+
+@app.route("/registrants")
+def registrants():
+    db = get_db()
+    registrants = db.execute("SELECT name, sport FROM registrants")
+    return render_template("registrants.html", registrants=registrants)
